@@ -21,6 +21,9 @@ namespace Reversi
         int turn = 0;
         int cursorCol;
         int cursorRow;
+        int blueScore = 0;
+        int orangeScore = 0;
+        string winner = "";
         int[,] board = new int[8, 8] { { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 0, 1, -1, -1, -1 }, 
                                        { -1, -1, -1, 1, 0, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
@@ -29,11 +32,12 @@ namespace Reversi
         int[] possible = new int[8];
         int numOfPossible;
         enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft }
-
+        Pen blackPen = new Pen(Color.Black, (float)2.5);
 
         public Form1()
         {
             InitializeComponent();
+            FindLegalMoves();
             UpdateSize();
             DoubleBuffered = true;
             this.Size = new System.Drawing.Size(620, 620);
@@ -53,6 +57,18 @@ namespace Reversi
             {
                 x = margin;
                 y = (ClientSize.Height - 8 * cellSize) / 2;
+            }
+        }
+
+        private void Score()
+        {
+            blueScore = 0;
+            orangeScore = 0; 
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                    if (board[i, j] == 0) blueScore++;
+                    else if (board[i, j] == 1) orangeScore++;
             }
         }
 
@@ -153,11 +169,26 @@ namespace Reversi
             }
         }
 
+        private void CheckWinConditions()
+        {
+            Score();
+            if (board.Cast<int>().Min() == 0)
+            {
+                if (blueScore > orangeScore) winner = "Blue is the winner!";
+                else if (orangeScore > blueScore) winner = "Orange is the winner!";
+                else winner = "The game is a draw. How'd you manage that?";
+            }
+            else if (legals.Cast<int>().Max() == 0)
+            {
+                if (turn % 2 == 0) winner = "Orange is the winner!";
+                else winner = "Blue is the winner!";
+            }
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             cursorCol = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
             cursorRow = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
-            FindLegalMoves();
             Refresh();
         }
 
@@ -173,6 +204,8 @@ namespace Reversi
                     turn++;
                 }
             }
+            FindLegalMoves();
+            CheckWinConditions();
             Refresh();
         }
 
@@ -186,6 +219,8 @@ namespace Reversi
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 4 * 100 / 96);
+            System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
@@ -195,15 +230,14 @@ namespace Reversi
                     if ((i % 2) + (j % 2) % 2 == 1) e.Graphics.FillRectangle(Brushes.LightGray, rect);
                     else e.Graphics.FillRectangle(Brushes.Gray, rect);
                     if (i == cursorCol && j == cursorRow) e.Graphics.FillRectangle(Brushes.Yellow, rect);
-                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawEllipse(Pens.DarkBlue, ellipse);
-                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawEllipse(Pens.DarkOrange, ellipse);
+                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawEllipse(blackPen, ellipse);
+                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawEllipse(blackPen, ellipse);
                     e.Graphics.DrawRectangle(Pens.Black, rect);
-                    System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 4 * 100 / 96);
-                    System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
                     if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Blue, ellipse);
                     if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.Orange, ellipse);
                 }
             }
+            if(winner != "") e.Graphics.DrawString(winner, font, Brushes.Black, 0, 0);
         }
     }
 }
