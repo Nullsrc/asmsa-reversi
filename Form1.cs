@@ -25,6 +25,9 @@ namespace Reversi
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 0, 1, -1, -1, -1 }, 
                                        { -1, -1, -1, 1, 0, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 } };
+        int[,] legals = new int[8, 8];
+        enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft }
+
 
         public Form1()
         {
@@ -34,37 +37,6 @@ namespace Reversi
             this.Size = new System.Drawing.Size(620, 620);
             this.MinimumSize = new System.Drawing.Size(220, 220);
             this.MaximumSize = new System.Drawing.Size(1020, 1020);
-        }
-
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            cursorCol = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
-            cursorRow = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
-            Refresh();
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            col = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
-            row = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
-            if ((col < 8 && col >= 0) && (row < 8 && row >= 0))
-            {
-                if (board[col, row] == -1)
-                {
-                    board[col, row] = turn % 2;
-                    turn++;
-                }
-            }
-            Refresh();
-        }
-
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            
-            UpdateSize();
-            Refresh();
         }
 
         private void UpdateSize()
@@ -82,6 +54,104 @@ namespace Reversi
             }
         }
 
+        private void FindLegalMoves()
+        {
+            Array.Clear(legals, 0, legals.Length);
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    // Vertical Down Pass:
+                    if (j < 6 && j >= 0)
+                    {
+                        if ((board[i, j + 1] != board[i, j]) && (board[i, j + 2] != board[i, j + 1]) && (board[i, j + 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.Down;
+                    }
+                    
+                    // Vertical Up Pass
+                    if (j < 8 && j >= 2)
+                    {
+                        if ((board[i, j - 1] != board[i, j]) && (board[i, j - 2] != board[i, j - 1]) && (board[i, j - 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.Up;
+                    }
+
+                    // Horizontal Right Pass
+                    if (i < 6 && i >= 0)
+                    {
+                        if ((board[i + 1, j] != board[i, j]) && (board[i + 2, j] != board[i + 1, j]) && (board[i + 2, j] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.Right;
+                    }
+
+                    //Horizontal Left Pass
+                    if (i < 8 && i >= 2)
+                    {
+                        if ((board[i - 1, j] != board[i, j]) && (board[i - 2, j] != board[i - 1, j]) && (board[i - 2, j] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.Left;
+                    }
+
+                    // Diagonal Down-Right Pass
+                    if (j < 6 && j >= 0 && i < 6 && i >= 0)
+                    {
+                        if ((board[i + 1, j + 1] != board[i, j]) && (board[i + 2, j + 2] != board[i + 1, j + 1]) && (board[i + 2, j + 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.DownRight;
+                    }
+                    
+                    // Diagonal Down-Left Pass
+                    if (j < 6 && j >= 0 && i < 8 && i >= 2)
+                    {
+                        if ((board[i - 1, j + 1] != board[i, j]) && (board[i - 2, j + 2] != board[i - 1, j + 1]) && (board[i - 2, j + 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.DownLeft;
+                    }
+
+                    // Diagonal Up-Right Pass
+                    if (j < 8 && j >= 2 && i < 6 && i >= 0)
+                    {
+                        if ((board[i + 1, j - 1] != board[i, j]) && (board[i + 2, j - 2] != board[i + 1, j - 1]) && (board[i + 2, j - 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.UpRight;
+                    }
+
+                    // Diagonal Up-Left Pass
+                    if (j < 8 && j >= 2 && i < 8 && i >= 2)
+                    {
+                        if ((board[i - 1, j - 1] != board[i, j]) && (board[i - 2, j - 2] != board[i - 1, j - 1]) && (board[i - 2, j - 2] == turn % 2) && (board[i, j] == -1))
+                            legals[i, j] = (int)Flips.UpLeft;
+                    }
+                }
+            }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            cursorCol = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
+            cursorRow = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
+            FindLegalMoves();
+            Refresh();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            col = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
+            row = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
+            if ((col < 8 && col >= 0) && (row < 8 && row >= 0))
+            {
+                if (board[col, row] == -1)
+                {
+                    board[col, row] = turn % 2;
+                    turn++;
+                }
+            }
+            Refresh();
+        }
+        
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            
+            UpdateSize();
+            Refresh();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             for (int i = 0; i < 8; i++)
@@ -89,17 +159,17 @@ namespace Reversi
                 for (int j = 0; j < 8; j++)
                 {
                     Rectangle rect = new Rectangle(x + i * cellSize, y + j * cellSize, cellSize, cellSize);
-                    if ((i % 2) + (j % 2) % 2 == 1)
-                    {
-                        e.Graphics.FillRectangle(Brushes.LightGray, rect);
-                    }
+                    Rectangle ellipse = new Rectangle(x + (i * cellSize) + cellSize / 8, y + (j * cellSize) + cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
+                    if ((i % 2) + (j % 2) % 2 == 1) e.Graphics.FillRectangle(Brushes.LightGray, rect);
                     else e.Graphics.FillRectangle(Brushes.Gray, rect);
                     if (i == cursorCol && j == cursorRow) e.Graphics.FillRectangle(Brushes.Yellow, rect);
+                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawEllipse(Pens.DarkBlue, ellipse);
+                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawEllipse(Pens.DarkOrange, ellipse);
                     e.Graphics.DrawRectangle(Pens.Black, rect);
                     System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 4 * 100 / 96);
                     System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
-                    if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Blue, x + (i * cellSize) + cellSize/8, y + (j * cellSize) + cellSize/8, 3 * cellSize /4, 3 * cellSize /4);
-                    if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.Orange, x + (i * cellSize) + cellSize / 8, y + (j * cellSize) + cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
+                    if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Blue, ellipse);
+                    if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.Orange, ellipse);
                 }
             }
         }
