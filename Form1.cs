@@ -34,6 +34,8 @@ namespace Reversi
         int numOfPossible;
         enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft }
         Pen blackPen = new Pen(Color.Black, (float)2.0);
+        Pen whitePen = new Pen(Color.White, (float)2.0);
+
 
         public Form1()
         {
@@ -226,6 +228,7 @@ namespace Reversi
         protected override void OnPaint(PaintEventArgs e)
         {
             System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 2);
+            System.Drawing.Font boardFont = new System.Drawing.Font("Courier New", cellSize / 4);
             System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
             for (int i = 0; i < 8; i++)
             {
@@ -235,10 +238,10 @@ namespace Reversi
                     Rectangle ellipse = new Rectangle(x + (i * cellSize) + cellSize / 8, y + (j * cellSize) + cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
                     e.Graphics.FillRectangle(Brushes.DarkGreen, rect);
                     e.Graphics.DrawRectangle(blackPen, rect);
-                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+", font, Brushes.Black, (i * cellSize) + x/2 + 1 + cellSize / 4, (j * cellSize) + y/3 + cellSize / 4);
-                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+", font, Brushes.White, (i * cellSize) + x/2 + 1 + cellSize / 4, (j * cellSize) + y/3 + cellSize / 4);
-                    if (i == cursorCol && j == cursorRow && turn % 2 == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
-                    if (i == cursorCol && j == cursorRow && turn % 2 == 1) e.Graphics.FillEllipse(Brushes.White, ellipse);
+                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+" + legals[i, j].ToString().Length, boardFont, Brushes.Black, (i * cellSize) + x +cellSize / 4, (j * cellSize) + y + cellSize / 3);
+                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+" + legals[i, j].ToString().Length, boardFont, Brushes.White, (i * cellSize) +x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
+                    if (i == cursorCol && j == cursorRow && turn % 2 == 0) e.Graphics.DrawEllipse(blackPen, ellipse);
+                    if (i == cursorCol && j == cursorRow && turn % 2 == 1) e.Graphics.DrawEllipse(whitePen, ellipse);
                     if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
                     if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.White, ellipse);
                 }
