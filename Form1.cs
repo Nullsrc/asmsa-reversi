@@ -21,9 +21,10 @@ namespace Reversi
         int turn = 0;
         int cursorCol;
         int cursorRow;
-        int blueScore = 0;
-        int orangeScore = 0;
+        int blackScore = 0;
+        int whiteScore = 0;
         string winner = "";
+        int lastLegalMax;
         int[,] board = new int[8, 8] { { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 0, 1, -1, -1, -1 }, 
                                        { -1, -1, -1, 1, 0, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
@@ -32,43 +33,37 @@ namespace Reversi
         int[] possible = new int[8];
         int numOfPossible;
         enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft }
-        Pen blackPen = new Pen(Color.Black, (float)2.5);
+        Pen blackPen = new Pen(Color.Black, (float)2.0);
 
         public Form1()
         {
             InitializeComponent();
             FindLegalMoves();
+            Score();
             UpdateSize();
             DoubleBuffered = true;
-            this.Size = new System.Drawing.Size(620, 620);
-            this.MinimumSize = new System.Drawing.Size(220, 220);
-            this.MaximumSize = new System.Drawing.Size(1020, 1020);
+            this.Size = new System.Drawing.Size(620, 784);
+            this.MinimumSize = new System.Drawing.Size(620, 784);
+            this.MaximumSize = new System.Drawing.Size(620, 784);
+            this.BackColor = Color.FromKnownColor(KnownColor.BurlyWood);
         }
 
         private void UpdateSize()
         {
-            cellSize = (Math.Min(ClientSize.Width, ClientSize.Height) - 2 * margin) / 8;
-            if (ClientSize.Width > ClientSize.Height)
-            {
-                y = margin;
-                x = (ClientSize.Width - 8 * cellSize) / 2;
-            }
-            else
-            {
-                x = margin;
-                y = (ClientSize.Height - 8 * cellSize) / 2;
-            }
+            cellSize = (ClientSize.Width - 2 * margin) / 8;
+            y = margin;
+            x = margin;
         }
 
         private void Score()
         {
-            blueScore = 0;
-            orangeScore = 0; 
+            blackScore = 0;
+            whiteScore = 0; 
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
-                    if (board[i, j] == 0) blueScore++;
-                    else if (board[i, j] == 1) orangeScore++;
+                    if (board[i, j] == 0) blackScore++;
+                    else if (board[i, j] == 1) whiteScore++;
             }
         }
 
@@ -171,17 +166,27 @@ namespace Reversi
 
         private void CheckWinConditions()
         {
-            Score();
             if (board.Cast<int>().Min() == 0)
             {
-                if (blueScore > orangeScore) winner = "Blue is the winner!";
-                else if (orangeScore > blueScore) winner = "Orange is the winner!";
-                else winner = "The game is a draw. How'd you manage that?";
+                if (blackScore > whiteScore) winner = "Black is the winner!";
+                else if (whiteScore > blackScore) winner = "White is the winner!";
+                else winner = "Draw...";
             }
-            else if (legals.Cast<int>().Max() == 0)
+            else if (legals.Cast<int>().Max() == 0 && lastLegalMax != 0)
             {
-                if (turn % 2 == 0) winner = "Orange is the winner!";
-                else winner = "Blue is the winner!";
+                lastLegalMax = 0;
+                turn++;
+                return;
+            }
+            else if (legals.Cast<int>().Max() == 0 && lastLegalMax == 0)
+            {
+                if (blackScore > whiteScore) winner = "Black is the winner!";
+                else if (whiteScore > blackScore) winner = "White is the winner!";
+                else winner = "Draw...";
+            }
+            else
+            {
+                lastLegalMax = 1;
             }
         }
 
@@ -194,6 +199,7 @@ namespace Reversi
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            CheckWinConditions();
             col = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
             row = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
             if ((col < 8 && col >= 0) && (row < 8 && row >= 0))
@@ -204,8 +210,8 @@ namespace Reversi
                     turn++;
                 }
             }
+            Score();
             FindLegalMoves();
-            CheckWinConditions();
             Refresh();
         }
 
@@ -219,7 +225,7 @@ namespace Reversi
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 4 * 100 / 96);
+            System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 2);
             System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
             for (int i = 0; i < 8; i++)
             {
@@ -227,17 +233,24 @@ namespace Reversi
                 {
                     Rectangle rect = new Rectangle(x + i * cellSize, y + j * cellSize, cellSize, cellSize);
                     Rectangle ellipse = new Rectangle(x + (i * cellSize) + cellSize / 8, y + (j * cellSize) + cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
-                    if ((i % 2) + (j % 2) % 2 == 1) e.Graphics.FillRectangle(Brushes.LightGray, rect);
-                    else e.Graphics.FillRectangle(Brushes.Gray, rect);
-                    if (i == cursorCol && j == cursorRow) e.Graphics.FillRectangle(Brushes.Yellow, rect);
-                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawEllipse(blackPen, ellipse);
-                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawEllipse(blackPen, ellipse);
-                    e.Graphics.DrawRectangle(Pens.Black, rect);
-                    if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Blue, ellipse);
-                    if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.Orange, ellipse);
+                    e.Graphics.FillRectangle(Brushes.DarkGreen, rect);
+                    e.Graphics.DrawRectangle(blackPen, rect);
+                    if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+", font, Brushes.Black, (i * cellSize) + x/2 + 1 + cellSize / 4, (j * cellSize) + y/3 + cellSize / 4);
+                    if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+", font, Brushes.White, (i * cellSize) + x/2 + 1 + cellSize / 4, (j * cellSize) + y/3 + cellSize / 4);
+                    if (i == cursorCol && j == cursorRow && turn % 2 == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
+                    if (i == cursorCol && j == cursorRow && turn % 2 == 1) e.Graphics.FillEllipse(Brushes.White, ellipse);
+                    if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
+                    if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.White, ellipse);
                 }
             }
-            if(winner != "") e.Graphics.DrawString(winner, font, Brushes.Black, 0, 0);
+
+            Rectangle BlackHUDEllipse = new Rectangle(x, 2 * y + 8 * cellSize, 3 * cellSize / 4, 3 * cellSize / 4);
+            Rectangle WhiteHUDEllipse = new Rectangle(x + 4 * cellSize, 2 * y + 8 * cellSize, 3 * cellSize / 4, 3 * cellSize / 4);
+            e.Graphics.FillEllipse(Brushes.Black, BlackHUDEllipse);
+            e.Graphics.FillEllipse(Brushes.White, WhiteHUDEllipse);
+            e.Graphics.DrawString(blackScore.ToString(), font, Brushes.Black, 2 * x + 17 * cellSize / 16, 2 * y + 8 * cellSize);
+            e.Graphics.DrawString(whiteScore.ToString(), font, Brushes.White, 8 * x + 17 * cellSize / 4, 2 * y + 8 * cellSize);
+            e.Graphics.DrawString(winner, font, Brushes.Black, x, 2 * y + 9 * cellSize);
         }
     }
 }
