@@ -26,6 +26,8 @@ namespace Reversi
                                        { -1, -1, -1, 1, 0, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 }, 
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 } };
         int[,] legals = new int[8, 8];
+        int[] possible = new int[8];
+        int numOfPossible;
         enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft }
 
 
@@ -72,51 +74,82 @@ namespace Reversi
                     if (j < 8 && j >= 2)
                     {
                         if ((board[i, j - 1] != board[i, j]) && (board[i, j - 2] != board[i, j - 1]) && (board[i, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.Up;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Up;
                     }
 
                     // Horizontal Right Pass
                     if (i < 6 && i >= 0)
                     {
                         if ((board[i + 1, j] != board[i, j]) && (board[i + 2, j] != board[i + 1, j]) && (board[i + 2, j] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.Right;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Right;
                     }
 
                     //Horizontal Left Pass
                     if (i < 8 && i >= 2)
                     {
                         if ((board[i - 1, j] != board[i, j]) && (board[i - 2, j] != board[i - 1, j]) && (board[i - 2, j] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.Left;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Left;
                     }
 
                     // Diagonal Down-Right Pass
                     if (j < 6 && j >= 0 && i < 6 && i >= 0)
                     {
                         if ((board[i + 1, j + 1] != board[i, j]) && (board[i + 2, j + 2] != board[i + 1, j + 1]) && (board[i + 2, j + 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.DownRight;
+                            legals[i, j] = legals[i,j] * 10 + (int)Flips.DownRight;
                     }
                     
                     // Diagonal Down-Left Pass
                     if (j < 6 && j >= 0 && i < 8 && i >= 2)
                     {
                         if ((board[i - 1, j + 1] != board[i, j]) && (board[i - 2, j + 2] != board[i - 1, j + 1]) && (board[i - 2, j + 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.DownLeft;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.DownLeft;
                     }
 
                     // Diagonal Up-Right Pass
                     if (j < 8 && j >= 2 && i < 6 && i >= 0)
                     {
                         if ((board[i + 1, j - 1] != board[i, j]) && (board[i + 2, j - 2] != board[i + 1, j - 1]) && (board[i + 2, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.UpRight;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.UpRight;
                     }
 
                     // Diagonal Up-Left Pass
                     if (j < 8 && j >= 2 && i < 8 && i >= 2)
                     {
                         if ((board[i - 1, j - 1] != board[i, j]) && (board[i - 2, j - 2] != board[i - 1, j - 1]) && (board[i - 2, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.UpLeft;
+                            legals[i, j] = legals[i, j] * 10 + (int)Flips.UpLeft;
                     }
                 }
+            }
+        }
+
+        private void GenerateAllFlips(int col, int row)
+        {
+            numOfPossible = legals[col, row].ToString().Length;
+            for (int i = 0; i < numOfPossible; i++)
+            {
+                possible[i] = legals[col, row] % 10;
+                legals[col, row] = legals[col, row] / 10;
+            }
+        }
+
+        private void Place(int col, int row)
+        {
+            board[col, row] = turn % 2;
+            GenerateAllFlips(col, row);
+            for (int i = 0; i < numOfPossible; i++)
+            {
+                switch (possible[i])
+                {
+                    case (int)Flips.Down: board[col, row + 1] = turn % 2; break;
+                    case (int)Flips.Up: board[col, row - 1] = turn % 2; break;
+                    case (int)Flips.Right: board[col + 1, row] = turn % 2; break;
+                    case (int)Flips.Left: board[col - 1, row] = turn % 2; break;
+                    case (int)Flips.DownRight: board[col + 1, row + 1] = turn % 2; break;
+                    case (int)Flips.DownLeft: board[col - 1, row + 1] = turn % 2; break;
+                    case (int)Flips.UpRight: board[col + 1, row - 1] = turn % 2; break;
+                    case (int)Flips.UpLeft: board[col - 1, row - 1] = turn % 2; break;
+                    default: break;
+                } 
             }
         }
 
@@ -134,15 +167,14 @@ namespace Reversi
             row = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
             if ((col < 8 && col >= 0) && (row < 8 && row >= 0))
             {
-                if (board[col, row] == -1)
+                if (legals[col, row] > 0)
                 {
-                    board[col, row] = turn % 2;
+                    Place(col, row);
                     turn++;
                 }
             }
             Refresh();
         }
-        
 
         protected override void OnResize(EventArgs e)
         {
