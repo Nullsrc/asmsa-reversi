@@ -22,8 +22,8 @@ namespace Reversi
         string winner = "";     // Printed when a win condition is met.
         int lastLegalMax;       // Used to switch turns if one player does not have any possible moves
         int[,] board = new int[8, 8] { { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },  
-       /* This is the defaault state */{ -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 0, 1, -1, -1, -1 },
-       /* of the game board          */{ -1, -1, -1, 1, 0, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
+       /* This is the defaault state */{ -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 1, 0, -1, -1, -1 },
+       /* of the game board          */{ -1, -1, -1, 0, 1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 } };
         int[,] legals = new int[8, 8];  // Secondary board which tracks legal plays
         int[] possible = new int[8];    // Array which tracks all possible legal plays on a given cell
@@ -144,7 +144,8 @@ namespace Reversi
         #endregion
 
         #region Placement
-        
+       
+
         /* void Place(int, int) ~ Given a cell's coordinates, generate all legal
          *                        moves and apply them                          */
         private void Place(int col, int row)
@@ -153,26 +154,90 @@ namespace Reversi
             GenerateAllFlips(col, row);
             for (int i = 0; i < numOfPossible; i++)
             {
-                switch (possible[i])
+                if (possible[i] == (int)Flips.Down) FlipInDirection(Flips.Down, col, row);
+                if (possible[i] == (int)Flips.Up) FlipInDirection(Flips.Up, col, row);
+                if (possible[i] == (int)Flips.Right) FlipInDirection(Flips.Right, col, row);
+                if (possible[i] == (int)Flips.Left) FlipInDirection(Flips.Left, col, row);
+                if (possible[i] == (int)Flips.DownRight) FlipInDirection(Flips.DownRight, col, row);
+                if (possible[i] == (int)Flips.DownLeft) FlipInDirection(Flips.DownLeft, col, row);
+                if (possible[i] == (int)Flips.UpRight) FlipInDirection(Flips.UpRight, col, row);
+                if (possible[i] == (int)Flips.UpLeft) FlipInDirection(Flips.UpLeft, col, row);
+            }
+        }
+
+        private void FlipInDirection(Flips dir, int col, int row)
+        {
+            if (dir == Flips.Down)
+            {
+                for (int j = 1; j + row < 8; j++)
                 {
-                    case (int)Flips.Down: board[col, row + 1] = turn % 2; break;
-                    case (int)Flips.Up: board[col, row - 1] = turn % 2; break;
-                    case (int)Flips.Right: board[col + 1, row] = turn % 2; break;
-                    case (int)Flips.Left: board[col - 1, row] = turn % 2; break;
-                    case (int)Flips.DownRight: board[col + 1, row + 1] = turn % 2; break;
-                    case (int)Flips.DownLeft: board[col - 1, row + 1] = turn % 2; break;
-                    case (int)Flips.UpRight: board[col + 1, row - 1] = turn % 2; break;
-                    case (int)Flips.UpLeft: board[col - 1, row - 1] = turn % 2; break;
-                    default: break;
+                    if (board[col, j + row] == turn % 2) break;
+                    if (board[col, j + row] != turn % 2 && board[col, j + row] != -1) board[col, j + row] = turn % 2;
+                } 
+            }
+            if (dir == Flips.Up)
+            {
+                for (int j = 1; row - j >= 0; j++)
+                {
+                    if (board[col, row - j] == turn % 2) break;
+                    if (board[col, row - j] != turn % 2 && board[col, row - j] != -1) board[col, row - j] = turn % 2;
+                }
+            }
+            if (dir == Flips.Right)
+            {
+                for (int i = 1; i + col < 8; i++)
+                {
+                    if (board[col + i, row] == turn % 2) break;
+                    if (board[col + i, row] != turn % 2 && board[col + i, row] != -1) board[col + i, row] = turn % 2;
+                }
+            }
+            if (dir == Flips.Left)
+            {
+                for (int i = 1; col - i >= 0; i++)
+                {
+                    if (board[col - i, row] == turn % 2) break;
+                    if (board[col - i, row] != turn % 2 && board[col - i, row] != -1) board[col - i, row] = turn % 2;
+                }
+            }
+            if (dir == Flips.DownRight)
+            {
+                for (int i = 1; i + row < 8; i++)
+                {
+                    if (col + i > 7 || board[col + i, row + i] == turn % 2) break;
+                    if (board[col + i, row + i] != turn % 2 && board[col + i, row + i] != -1) board[col + i, row + i] = turn % 2;
+                }
+            }
+            if (dir == Flips.DownLeft)
+            {
+                for (int i = 1; i + row < 8; i++)
+                {
+                    if (col - i < 0 || board[col - i, row + i] == turn % 2) break;
+                    if (board[col - i, row + i] != turn % 2 && board[col - i, row + i] != -1) board[col - i, row + i] = turn % 2;
+                }
+            }
+            if (dir == Flips.UpRight)
+            {
+                for (int i = 1; row - i >= 0; i++)
+                {
+                    if (col + i > 7 || board[col + i, row - i] == turn % 2) break;
+                    if (board[col + i, row - i] != turn % 2 && board[col + i, row - i] != -1) board[col + i, row - i] = turn % 2;
+                }
+            }
+            if (dir == Flips.UpLeft)
+            {
+                for (int i = 1; row - i >= 0; i++)
+                {
+                    if (col - i < 0 || board[col - i, row - i] == turn % 2) break;
+                    if (board[col - i, row - i] != turn % 2 && board[col - i, row - i] != -1) board[col - i, row - i] = turn % 2;
                 }
             }
         }
         #endregion
 
         #region Scoring
-        
+
         /* void CheckWinConditions() ~ Look for certain properties of the board
-                                       to determine if a player has won         */ 
+                                       to determine if a player has won         */
         private void CheckWinConditions()
         {
             if (board.Cast<int>().Min() == 0)   // If the board is full
