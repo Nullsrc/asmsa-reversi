@@ -36,8 +36,9 @@ namespace Reversi
         #region Constructor
         public Form1()
         {
-            InitializeComponent();      // Starts the form itself
-            FindLegalMoves();           // Initial sweep of legal moves
+            InitializeComponent();      // Starts the form
+            Array.Clear(legals, 0, legals.Length);  // Clear the legal array before scanning
+            for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) Scan(i, j);           // Initial sweep of legal moves
             Score();                    // Take the initial score (2-2)
             UpdateSize();               // Set the sizes of the margins and cells
             DoubleBuffered = true;      // Drawing is smoother
@@ -61,71 +62,73 @@ namespace Reversi
 
         #region Legality and Flip Generation
 
-        /* void FindLegalMoves() ~ Scans the board in all directions to locate
-         *                         possible legal moves for the current player */
-        private void FindLegalMoves()
+        /* void Scan() ~ Scans the point in all directions to locate possible
+         *               legal moves for the current player                    */
+        private void Scan(int col, int row)
         {
-            Array.Clear(legals, 0, legals.Length);
-            for (int i = 0; i < 8; i++)
+            for (int j = 1; j + row < 8; j++)
             {
-                for (int j = 0; j < 8; j++)
-                {
-                    // Vertical Down Pass:
-                    if (j < 6 && j >= 0)
-                    {
-                        if ((board[i, j + 1] != board[i, j]) && (board[i, j + 2] != board[i, j + 1]) && (board[i, j + 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = (int)Flips.Down;
-                    }
-
-                    // Vertical Up Pass
-                    if (j < 8 && j >= 2)
-                    {
-                        if ((board[i, j - 1] != board[i, j]) && (board[i, j - 2] != board[i, j - 1]) && (board[i, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Up;
-                    }
-
-                    // Horizontal Right Pass
-                    if (i < 6 && i >= 0)
-                    {
-                        if ((board[i + 1, j] != board[i, j]) && (board[i + 2, j] != board[i + 1, j]) && (board[i + 2, j] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Right;
-                    }
-
-                    //Horizontal Left Pass
-                    if (i < 8 && i >= 2)
-                    {
-                        if ((board[i - 1, j] != board[i, j]) && (board[i - 2, j] != board[i - 1, j]) && (board[i - 2, j] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.Left;
-                    }
-
-                    // Diagonal Down-Right Pass
-                    if (j < 6 && j >= 0 && i < 6 && i >= 0)
-                    {
-                        if ((board[i + 1, j + 1] != board[i, j]) && (board[i + 2, j + 2] != board[i + 1, j + 1]) && (board[i + 2, j + 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.DownRight;
-                    }
-
-                    // Diagonal Down-Left Pass
-                    if (j < 6 && j >= 0 && i < 8 && i >= 2)
-                    {
-                        if ((board[i - 1, j + 1] != board[i, j]) && (board[i - 2, j + 2] != board[i - 1, j + 1]) && (board[i - 2, j + 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.DownLeft;
-                    }
-
-                    // Diagonal Up-Right Pass
-                    if (j < 8 && j >= 2 && i < 6 && i >= 0)
-                    {
-                        if ((board[i + 1, j - 1] != board[i, j]) && (board[i + 2, j - 2] != board[i + 1, j - 1]) && (board[i + 2, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.UpRight;
-                    }
-
-                    // Diagonal Up-Left Pass
-                    if (j < 8 && j >= 2 && i < 8 && i >= 2)
-                    {
-                        if ((board[i - 1, j - 1] != board[i, j]) && (board[i - 2, j - 2] != board[i - 1, j - 1]) && (board[i - 2, j - 2] == turn % 2) && (board[i, j] == -1))
-                            legals[i, j] = legals[i, j] * 10 + (int)Flips.UpLeft;
-                    }
-                }
+                if (board[col, row + j] == turn % 2 || board[col, row + j] == -1) break;
+                else if (board[col, row + j] != turn % 2 && board[col, row + j] != -1)
+                    for (int k = j + row + 1; k < 8; k++)
+                        if (board[col, k] == turn % 2)
+                        { legals[col, row] = (int)Flips.Down; break; }
+            }
+            for (int j = 1; row - j >= 0; j++)
+            {
+                if (board[col, row - j] == turn % 2 || board[col, row - j] == -1) break;
+                else if (board[col, row - j] != turn % 2 && board[col, row - j] != -1)
+                    for (int k = row - j - 1; k >= 0; k--)
+                        if (board[col, k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; break; }
+            }
+            for (int i = 1; col + i < 8; i++)
+            {
+                if (board[col + i, row] == turn % 2 || board[col + i, row] == -1) break;
+                else if (board[col + i, row] != turn % 2 && board[col + i, row] != -1)
+                    for (int k = col + i + 1; k < 8; k++)
+                        if (board[k, row] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; break; }
+            }
+            for (int i = 1; col - i >= 0; i++)
+            {
+                if (board[col - i, row] == turn % 2 || board[col - i, row] == -1) break;
+                else if (board[col - i, row] != turn % 2 && board[col - i, row] != -1)
+                    for (int k = col - i - 1; k >= 0; k--)
+                        if (board[k, row] == turn % 2) legals[col, row] = 10 * legals[col, row] + (int)Flips.Left;
+                        else break;
+            }
+            for (int j = 1; j + row < 8; j++)
+            {
+                if (j + col > 7 || board[col + j, row + j] == turn % 2 || board[col + j, row + j] == -1) break;
+                else if (board[col + j, row + j] != turn % 2 && board[col + j, row + j] != -1)
+                    for (int k = j + 1; row + k < 8; k++)
+                        if (col + k < 8 && board[col + k, row + k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; break; }
+            }
+            for (int j = 1; j + row < 8; j++)
+            {
+                if (col - j < 0 || board[col - j, row + j] == turn % 2 || board[col - j, row + j] == -1) break;
+                else if (board[col - j, row + j] != turn % 2 && board[col - j, row + j] != -1)
+                    for (int k = j + 1; row + k < 8; k++)
+                        if (col - k >= 0 && board[col - k, row + k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; break; }
+            }
+            for (int j = 1; row - j >= 0; j++)
+            {
+                if (j + col > 7 || board[col + j, row - j] == turn % 2 || board[col + j, row - j] == -1) break;
+                else if (board[col + j, row - j] != turn % 2 && board[col + j, row - j] != -1)
+                    for (int k = j + 1; row - k >= 0; k++)
+                        if (col + k < 8 && board[col + k, row - k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; break; }
+            }
+            for (int j = 1; row - j >= 0; j++)
+            {
+                if (col - j < 0 || board[col - j, row - j] == turn % 2 || board[col - j, row - j] == -1) break;
+                else if (board[col - j, row - j] != turn % 2 && board[col - j, row - j] != -1)
+                    for (int k = j + 1; row - k >= 0; k++)
+                        if (col - k >= 0 && board[col - k, row - k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; break; }
             }
         }
 
@@ -300,7 +303,11 @@ namespace Reversi
                 }
             }
             Score();
-            FindLegalMoves();
+            Array.Clear(legals, 0, legals.Length);
+            for (int i = 0; i < 8; i ++)
+            {
+                for (int j = 0; j < 8; j++) if (board[i,j] == -1) Scan(i, j);
+            }
             Refresh();
         }
 
