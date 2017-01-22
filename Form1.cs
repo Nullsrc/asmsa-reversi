@@ -28,16 +28,17 @@ namespace Reversi
         int[,] legals = new int[8, 8];  // Secondary board which tracks legal plays
         int[] possible = new int[8];    // Array which tracks all possible legal plays on a given cell
         int numOfPossible;              // Cross-function var that tracks number of non-zero values in possible[]
+        int[,] tally = new int[8, 8];
         enum Flips { None, Down, Up, Right, Left, DownRight, DownLeft, UpRight, UpLeft } // Easy enumeration (0-8) of all possible moves
         Pen blackPen = new Pen(Color.Black, (float)2.0);    // A black pen with 2x thickness
         Pen whitePen = new Pen(Color.White, (float)2.0);    // A white pen with 2x thickness
         #endregion
 
-        #region Constructor
+        #region Constructor and Related
         public Form1()
         {
             InitializeComponent();      // Starts the form
-            Array.Clear(legals, 0, legals.Length);  // Clear the legal array before scanning
+            ClearArrays();
             for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) Scan(i, j);           // Initial sweep of legal moves
             Score();                    // Take the initial score (2-2)
             UpdateSize();               // Set the sizes of the margins and cells
@@ -58,6 +59,12 @@ namespace Reversi
             y = 10;
             x = 10;
         }
+
+        private void ClearArrays()
+        {
+            Array.Clear(legals, 0, legals.Length);
+            Array.Clear(tally, 0, tally.Length);
+        }
         #endregion
 
         #region Legality and Flip Generation
@@ -70,32 +77,36 @@ namespace Reversi
             {
                 if (board[col, row + j] == turn % 2 || board[col, row + j] == -1) break;
                 else if (board[col, row + j] != turn % 2 && board[col, row + j] != -1)
-                    for (int k = j + row + 1; k < 8; k++)
-                        if (board[col, k] == turn % 2)
-                        { legals[col, row] = (int)Flips.Down; break; }
+                    for (int k = j + 1; row +k < 8; k++)
+                        if (board[col, row + k] == turn % 2)
+                        { legals[col, row] = (int)Flips.Down; tally[col, row] += j; break; }
+                        else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
                 if (board[col, row - j] == turn % 2 || board[col, row - j] == -1) break;
                 else if (board[col, row - j] != turn % 2 && board[col, row - j] != -1)
-                    for (int k = row - j - 1; k >= 0; k--)
-                        if (board[col, k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; break; }
+                    for (int k = j + 1; row - k >= 0; k++)
+                        if (board[col, row - k] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; tally[col, row] += j; break; }
+                        else break;
             }
             for (int i = 1; col + i < 8; i++)
             {
                 if (board[col + i, row] == turn % 2 || board[col + i, row] == -1) break;
                 else if (board[col + i, row] != turn % 2 && board[col + i, row] != -1)
-                    for (int k = col + i + 1; k < 8; k++)
-                        if (board[k, row] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; break; }
+                    for (int k = i + 1; col + k < 8; k++)
+                        if (board[col + k, row] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; tally[col, row] += i; break; }
+                        else break;
             }
             for (int i = 1; col - i >= 0; i++)
             {
                 if (board[col - i, row] == turn % 2 || board[col - i, row] == -1) break;
                 else if (board[col - i, row] != turn % 2 && board[col - i, row] != -1)
-                    for (int k = col - i - 1; k >= 0; k--)
-                        if (board[k, row] == turn % 2) legals[col, row] = 10 * legals[col, row] + (int)Flips.Left;
+                    for (int k = i + 1; col - k >= 0; k++)
+                        if (board[col - k, row] == turn % 2)
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Left; tally[col, row] += i; break; }
                         else break;
             }
             for (int j = 1; j + row < 8; j++)
@@ -104,7 +115,8 @@ namespace Reversi
                 else if (board[col + j, row + j] != turn % 2 && board[col + j, row + j] != -1)
                     for (int k = j + 1; row + k < 8; k++)
                         if (col + k < 8 && board[col + k, row + k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; break; }
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; tally[col, row] += j; break; }
+                        else break;
             }
             for (int j = 1; j + row < 8; j++)
             {
@@ -112,7 +124,8 @@ namespace Reversi
                 else if (board[col - j, row + j] != turn % 2 && board[col - j, row + j] != -1)
                     for (int k = j + 1; row + k < 8; k++)
                         if (col - k >= 0 && board[col - k, row + k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; break; }
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; tally[col, row] += j; break; }
+                        else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
@@ -120,7 +133,8 @@ namespace Reversi
                 else if (board[col + j, row - j] != turn % 2 && board[col + j, row - j] != -1)
                     for (int k = j + 1; row - k >= 0; k++)
                         if (col + k < 8 && board[col + k, row - k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; break; }
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; tally[col, row] += j; break; }
+                        else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
@@ -128,7 +142,8 @@ namespace Reversi
                 else if (board[col - j, row - j] != turn % 2 && board[col - j, row - j] != -1)
                     for (int k = j + 1; row - k >= 0; k++)
                         if (col - k >= 0 && board[col - k, row - k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; break; }
+                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; tally[col, row] += j; break; }
+                        else break;
             }
         }
 
@@ -303,7 +318,7 @@ namespace Reversi
                 }
             }
             Score();
-            Array.Clear(legals, 0, legals.Length);
+            ClearArrays();
             for (int i = 0; i < 8; i ++)
             {
                 for (int j = 0; j < 8; j++) if (board[i,j] == -1) Scan(i, j);
@@ -337,8 +352,8 @@ namespace Reversi
 /* Piece Def    */  Rectangle ellipse = new Rectangle(x + (i * cellSize) + cellSize / 8, y + (j * cellSize) + cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
 /* Draw Board   */  e.Graphics.FillRectangle(Brushes.DarkGreen, rect);
 /* Draw Tiles   */  e.Graphics.DrawRectangle(blackPen, rect);
-/* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+" + legals[i, j].ToString().Length, boardFont, Brushes.Black, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
-/* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+" + legals[i, j].ToString().Length, boardFont, Brushes.White, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
+/* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+" + tally[i, j].ToString(), boardFont, Brushes.Black, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
+/* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+" + tally[i, j].ToString(), boardFont, Brushes.White, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
 /* Draw Cursor  */  if (i == cursorCol && j == cursorRow && turn % 2 == 0) e.Graphics.DrawEllipse(blackPen, ellipse);
 /* Draw Cursor  */  if (i == cursorCol && j == cursorRow && turn % 2 == 1) e.Graphics.DrawEllipse(whitePen, ellipse);
 /* Draw Pieces  */  if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
