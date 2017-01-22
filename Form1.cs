@@ -15,8 +15,8 @@ namespace Reversi
         int row;                // Used to determine where mouse clicks are
         int col;                // Used to determine where mouse clicks are
         int turn = 0;           // Used to alternate turns
-        int cursorCol;          // Used to determine where the cursor is
-        int cursorRow;          // Used to determine where the cursor is
+        int cursorX;          // Used to determine where the cursor is
+        int cursorY;          // Used to determine where the cursor is
         int blackScore = 0;     // Defines score of the black player
         int whiteScore = 0;     // Defines score of the white player
         string winner = "";     // Printed when a win condition is met.
@@ -38,6 +38,7 @@ namespace Reversi
         public Form1()
         {
             InitializeComponent();      // Starts the form
+            MessageBox.Show("Welcome to Reversi!\nPress H for help.", "ASMSA Reversi", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             ClearArrays();
             for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) Scan(i, j);           // Initial sweep of legal moves
             Score();                    // Take the initial score (2-2)
@@ -77,71 +78,63 @@ namespace Reversi
             {
                 if (board[col, row + j] == turn % 2 || board[col, row + j] == -1) break;
                 else if (board[col, row + j] != turn % 2 && board[col, row + j] != -1)
-                    for (int k = j + 1; row +k < 8; k++)
-                        if (board[col, row + k] == turn % 2)
-                        { legals[col, row] = (int)Flips.Down; tally[col, row] += j; break; }
-                        else break;
+                    if (row + (j + 1) < 8 && board[col, row + (j + 1)] == turn % 2)
+                    { legals[col, row] = (int)Flips.Down; tally[col, row] += j; break; }
+                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
                 if (board[col, row - j] == turn % 2 || board[col, row - j] == -1) break;
                 else if (board[col, row - j] != turn % 2 && board[col, row - j] != -1)
-                    for (int k = j + 1; row - k >= 0; k++)
-                        if (board[col, row - k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; tally[col, row] += j; break; }
-                        else break;
+                    if (row - (j + 1) >= 0 && board[col, row - (j + 1)] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; tally[col, row] += j; break; }
+                    else break;
             }
             for (int i = 1; col + i < 8; i++)
             {
                 if (board[col + i, row] == turn % 2 || board[col + i, row] == -1) break;
                 else if (board[col + i, row] != turn % 2 && board[col + i, row] != -1)
-                    for (int k = i + 1; col + k < 8; k++)
-                        if (board[col + k, row] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; tally[col, row] += i; break; }
-                        else break;
+                    if (col + (i + 1) < 8 && board[col + (i + 1), row] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; tally[col, row] += i; break; }
+                    else break;
             }
             for (int i = 1; col - i >= 0; i++)
             {
                 if (board[col - i, row] == turn % 2 || board[col - i, row] == -1) break;
                 else if (board[col - i, row] != turn % 2 && board[col - i, row] != -1)
-                    for (int k = i + 1; col - k >= 0; k++)
-                        if (board[col - k, row] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.Left; tally[col, row] += i; break; }
-                        else break;
+                    if (col - (i + 1) >= 0 && board[col - (i + 1), row] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.Left; tally[col, row] += i; break; }
+                    else break;
             }
             for (int j = 1; j + row < 8; j++)
             {
                 if (j + col > 7 || board[col + j, row + j] == turn % 2 || board[col + j, row + j] == -1) break;
                 else if (board[col + j, row + j] != turn % 2 && board[col + j, row + j] != -1)
-                    for (int k = j + 1; row + k < 8; k++)
-                        if (col + k < 8 && board[col + k, row + k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; tally[col, row] += j; break; }
-                        else break;
+                    if (col + (j + 1) < 8 && row + (j + 1) < 8 && board[col + (j + 1), row + (j + 1)] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; tally[col, row] += j; break; }
+                    else break;
             }
             for (int j = 1; j + row < 8; j++)
             {
                 if (col - j < 0 || board[col - j, row + j] == turn % 2 || board[col - j, row + j] == -1) break;
                 else if (board[col - j, row + j] != turn % 2 && board[col - j, row + j] != -1)
-                    for (int k = j + 1; row + k < 8; k++)
-                        if (col - k >= 0 && board[col - k, row + k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; tally[col, row] += j; break; }
-                        else break;
+                    if (col - (j + 1) >= 0 && row + (j + 1) < 8 && board[col - (j + 1), row + (j + 1)] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; tally[col, row] += j; break; }
+                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
                 if (j + col > 7 || board[col + j, row - j] == turn % 2 || board[col + j, row - j] == -1) break;
                 else if (board[col + j, row - j] != turn % 2 && board[col + j, row - j] != -1)
-                    for (int k = j + 1; row - k >= 0; k++)
-                        if (col + k < 8 && board[col + k, row - k] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; tally[col, row] += j; break; }
-                        else break;
+                    if (col + (j + 1) < 8 && row - (j + 1) >= 0 && board[col + (j + 1), row - (j + 1)] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; tally[col, row] += j; break; }
+                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
                 if (col - j < 0 || board[col - j, row - j] == turn % 2 || board[col - j, row - j] == -1) break;
                 else if (board[col - j, row - j] != turn % 2 && board[col - j, row - j] != -1)
-                    for (int k = j + 1; row - k >= 0; k++)
-                        if (col - k >= 0 && board[col - k, row - k] == turn % 2)
+                        if (col - (j + 1) >= 0 && row - (j + 1) >= 0 && board[col - (j + 1), row - (j + 1)] == turn % 2)
                         { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; tally[col, row] += j; break; }
                         else break;
             }
@@ -297,10 +290,19 @@ namespace Reversi
         #endregion
 
         #region Base Overrides
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.H)
+            {
+                MessageBox.Show("The black and white players each take turns placing tiles.\n\nIf a tile or a set of tiles is bounded vertically, horizontally, or diagonally by two other tiles, the intermediate tiles are flipped.\n\nEach move must flip tiles in this way.\n\nThe game ends when the board is full or neither player can play; the player with the highest score wins.",
+                                "Help", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1);
+            }
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            cursorCol = (int)Math.Floor((e.X - x) * 1.0 / cellSize);
-            cursorRow = (int)Math.Floor((e.Y - y) * 1.0 / cellSize);
+            cursorX = (int)e.X;
+            cursorY = (int)e.Y;
             Refresh();
         }
 
@@ -342,7 +344,6 @@ namespace Reversi
             System.Drawing.Font font = new System.Drawing.Font("Ubuntu", cellSize / 2);
             System.Drawing.Font boardFont = new System.Drawing.Font("Courier New", cellSize / 4);
             System.Drawing.StringFormat drawFormat = new System.Drawing.StringFormat();
-
             // These for loops iterate over the screen and generate the game board
             for (int i = 0; i < 8; i++)
             {
@@ -354,13 +355,12 @@ namespace Reversi
 /* Draw Tiles   */  e.Graphics.DrawRectangle(blackPen, rect);
 /* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 0) e.Graphics.DrawString("+" + tally[i, j].ToString(), boardFont, Brushes.Black, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
 /* Draw Legals  */  if (legals[i, j] > 0 && turn % 2 == 1) e.Graphics.DrawString("+" + tally[i, j].ToString(), boardFont, Brushes.White, (i * cellSize) + x + cellSize / 4, (j * cellSize) + y + cellSize / 3);
-/* Draw Cursor  */  if (i == cursorCol && j == cursorRow && turn % 2 == 0) e.Graphics.DrawEllipse(blackPen, ellipse);
-/* Draw Cursor  */  if (i == cursorCol && j == cursorRow && turn % 2 == 1) e.Graphics.DrawEllipse(whitePen, ellipse);
 /* Draw Pieces  */  if (board[i, j] == 0) e.Graphics.FillEllipse(Brushes.Black, ellipse);
 /* Draw Pieces  */  if (board[i, j] == 1) e.Graphics.FillEllipse(Brushes.White, ellipse);
                 }
             }
-
+            if (turn % 2 == 0) e.Graphics.FillEllipse(Brushes.Black, cursorX -  3 * cellSize / 8, cursorY - 3 * cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
+            if (turn % 2 == 1) e.Graphics.FillEllipse(Brushes.White, cursorX - 3 *cellSize / 8, cursorY - 3 * cellSize / 8, 3 * cellSize / 4, 3 * cellSize / 4);
             // Draw the HUD elements.
             Rectangle BlackHUDEllipse = new Rectangle(x, 2 * y + 8 * cellSize, 3 * cellSize / 4, 3 * cellSize / 4);
             Rectangle WhiteHUDEllipse = new Rectangle(x + 4 * cellSize, 2 * y + 8 * cellSize, 3 * cellSize / 4, 3 * cellSize / 4);
