@@ -23,7 +23,7 @@ namespace Reversi
         int lastLegalMax;       // Used to switch turns if one player does not have any possible moves
         int[,] board = new int[8, 8] { { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },  
        /* This is the defaault state */{ -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 1, 0, -1, -1, -1 },
-       /* of the game board          */{ -1, -1, -1, 0, 1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
+       /* of the game board          */{ -1, -1, -1, 0, 0, 1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 } };
         int[,] legals = new int[8, 8];  // Secondary board which tracks legal plays
         int[] possible = new int[8];    // Array which tracks all possible legal plays on a given cell
@@ -80,7 +80,6 @@ namespace Reversi
                 else if (board[col, row + j] != turn % 2 && board[col, row + j] != -1)
                     if (row + (j + 1) < 8 && board[col, row + (j + 1)] == turn % 2)
                     { legals[col, row] = (int)Flips.Down; tally[col, row] += j; break; }
-                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
@@ -88,7 +87,6 @@ namespace Reversi
                 else if (board[col, row - j] != turn % 2 && board[col, row - j] != -1)
                     if (row - (j + 1) >= 0 && board[col, row - (j + 1)] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.Up; tally[col, row] += j; break; }
-                    else break;
             }
             for (int i = 1; col + i < 8; i++)
             {
@@ -96,7 +94,6 @@ namespace Reversi
                 else if (board[col + i, row] != turn % 2 && board[col + i, row] != -1)
                     if (col + (i + 1) < 8 && board[col + (i + 1), row] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.Right; tally[col, row] += i; break; }
-                    else break;
             }
             for (int i = 1; col - i >= 0; i++)
             {
@@ -104,7 +101,6 @@ namespace Reversi
                 else if (board[col - i, row] != turn % 2 && board[col - i, row] != -1)
                     if (col - (i + 1) >= 0 && board[col - (i + 1), row] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.Left; tally[col, row] += i; break; }
-                    else break;
             }
             for (int j = 1; j + row < 8; j++)
             {
@@ -112,7 +108,6 @@ namespace Reversi
                 else if (board[col + j, row + j] != turn % 2 && board[col + j, row + j] != -1)
                     if (col + (j + 1) < 8 && row + (j + 1) < 8 && board[col + (j + 1), row + (j + 1)] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownRight; tally[col, row] += j; break; }
-                    else break;
             }
             for (int j = 1; j + row < 8; j++)
             {
@@ -120,7 +115,6 @@ namespace Reversi
                 else if (board[col - j, row + j] != turn % 2 && board[col - j, row + j] != -1)
                     if (col - (j + 1) >= 0 && row + (j + 1) < 8 && board[col - (j + 1), row + (j + 1)] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.DownLeft; tally[col, row] += j; break; }
-                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
@@ -128,15 +122,13 @@ namespace Reversi
                 else if (board[col + j, row - j] != turn % 2 && board[col + j, row - j] != -1)
                     if (col + (j + 1) < 8 && row - (j + 1) >= 0 && board[col + (j + 1), row - (j + 1)] == turn % 2)
                     { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpRight; tally[col, row] += j; break; }
-                    else break;
             }
             for (int j = 1; row - j >= 0; j++)
             {
                 if (col - j < 0 || board[col - j, row - j] == turn % 2 || board[col - j, row - j] == -1) break;
                 else if (board[col - j, row - j] != turn % 2 && board[col - j, row - j] != -1)
-                        if (col - (j + 1) >= 0 && row - (j + 1) >= 0 && board[col - (j + 1), row - (j + 1)] == turn % 2)
-                        { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; tally[col, row] += j; break; }
-                        else break;
+                    if (col - (j + 1) >= 0 && row - (j + 1) >= 0 && board[col - (j + 1), row - (j + 1)] == turn % 2)
+                    { legals[col, row] = 10 * legals[col, row] + (int)Flips.UpLeft; tally[col, row] += j; break; }
             }
         }
 
