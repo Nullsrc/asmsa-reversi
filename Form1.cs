@@ -23,7 +23,7 @@ namespace Reversi
         int lastLegalMax;       // Used to switch turns if one player does not have any possible moves
         int[,] board = new int[8, 8] { { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },  
        /* This is the defaault state */{ -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, 1, 0, -1, -1, -1 },
-       /* of the game board          */{ -1, -1, -1, 0, 0, 1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
+       /* of the game board          */{ -1, -1, -1, 0, 1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 },
                                        { -1, -1, -1, -1, -1, -1, -1, -1 }, { -1, -1, -1, -1, -1, -1, -1, -1 } };
         int[,] legals = new int[8, 8];  // Secondary board which tracks legal plays
         int[] possible = new int[8];    // Array which tracks all possible legal plays on a given cell
